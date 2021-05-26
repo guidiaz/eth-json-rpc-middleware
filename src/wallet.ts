@@ -1,6 +1,7 @@
 import {
   createAsyncMiddleware,
   createScaffoldMiddleware,
+  JsonRpcEngineNextCallback,
   JsonRpcMiddleware,
   JsonRpcRequest,
   PendingJsonRpcResponse,
@@ -41,7 +42,8 @@ interface WalletMiddlewareOptions {
   ) => Promise<Record<string, unknown>>;
   processTransaction?: (
     txParams: TransactionParams,
-    req: JsonRpcRequest<unknown>
+    req: JsonRpcRequest<unknown>,
+    next: JsonRpcEngineNextCallback
   ) => Promise<Record<string, unknown>>;
   processTypedMessage?: (
     msgParams: MessageParams,
@@ -118,6 +120,7 @@ export function createWalletMiddleware({
   async function sendTransaction(
     req: JsonRpcRequest<unknown>,
     res: PendingJsonRpcResponse<unknown>,
+    next: JsonRpcEngineNextCallback
   ): Promise<void> {
     if (!processTransaction) {
       throw ethErrors.rpc.methodNotSupported();
@@ -129,7 +132,7 @@ export function createWalletMiddleware({
       txParams.from as string,
       req,
     );
-    res.result = await processTransaction(txParams, req);
+    res.result = await processTransaction(txParams, req, next);
   }
 
   //
